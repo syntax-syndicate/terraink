@@ -14,6 +14,7 @@ import {
 } from "../application/posterReducer";
 import type { ResolvedTheme } from "@/features/theme/domain/types";
 import { getTheme } from "@/features/theme/infrastructure/themeRepository";
+import { applyThemeColorOverrides } from "@/features/theme/domain/colorPaths";
 import { generateMapStyle } from "@/features/map/infrastructure/maplibreStyle";
 import { useGeolocation } from "@/features/map/application/useGeolocation";
 import type { StyleSpecification } from "maplibre-gl";
@@ -101,7 +102,7 @@ export function PosterProvider({ children }: { children: ReactNode }) {
     if (Object.keys(state.customColors).length === 0) {
       return selectedTheme;
     }
-    return { ...selectedTheme, ...state.customColors } as ResolvedTheme;
+    return applyThemeColorOverrides(selectedTheme, state.customColors);
   }, [selectedTheme, state.customColors]);
 
   const mapStyle = useMemo(

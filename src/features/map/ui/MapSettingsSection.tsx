@@ -3,8 +3,10 @@ import { createCustomLayoutOption } from "@/features/layout/infrastructure/layou
 import {
   DISPLAY_PALETTE_KEYS,
   PALETTE_COLOR_LABELS,
+  type ThemeColorKey,
   type ThemeOption,
 } from "@/features/theme/domain/types";
+import { getThemeColorByPath } from "@/features/theme/domain/colorPaths";
 import { normalizeHexColor } from "@/shared/utils/color";
 import {
   buildDynamicColorChoices,
@@ -57,9 +59,12 @@ export default function MapSettingsSection({
   const [activePicker, setActivePicker] = useState("");
   const [isThemeEditing, setIsThemeEditing] = useState(false);
   const [isDetailLayersOpen, setIsDetailLayersOpen] = useState(false);
-  const [activeColorKey, setActiveColorKey] = useState<string | null>(null);
+  const defaultColorKey: ThemeColorKey = DISPLAY_PALETTE_KEYS[0] ?? "ui.bg";
+  const [activeColorKey, setActiveColorKey] = useState<ThemeColorKey | null>(
+    null,
+  );
   const [activeColorSession, setActiveColorSession] = useState<{
-    key: string;
+    key: ThemeColorKey;
     seedColor: string;
     seedPalette: string[];
   } | null>(null);
@@ -73,7 +78,8 @@ export default function MapSettingsSection({
   const currentThemePalette = useMemo(
     () =>
       DISPLAY_PALETTE_KEYS.map((key) => {
-        const themeColor = (selectedTheme as any)?.[key] ?? FALLBACK_COLOR;
+        const themeColor =
+          getThemeColorByPath(selectedTheme, key) || FALLBACK_COLOR;
         return customColors[key] ?? themeColor;
       }),
     [customColors, selectedTheme],
@@ -99,7 +105,7 @@ export default function MapSettingsSection({
     return buildDynamicColorChoices(
       sessionColor ||
         customColors[activeColorKey] ||
-        (selectedTheme as any)?.[activeColorKey] ||
+        getThemeColorByPath(selectedTheme, activeColorKey) ||
         currentThemePalette[0] ||
         "",
       sessionPalette,
@@ -115,7 +121,8 @@ export default function MapSettingsSection({
   const colorTargets = useMemo(
     () =>
       DISPLAY_PALETTE_KEYS.map((key) => {
-        const baseColor = (selectedTheme as any)?.[key] ?? FALLBACK_COLOR;
+        const baseColor =
+          getThemeColorByPath(selectedTheme, key) || FALLBACK_COLOR;
         const currentColor = customColors[key] ?? baseColor;
         return {
           key,
@@ -168,12 +175,10 @@ export default function MapSettingsSection({
     closePicker();
   }
 
-  function handleSwatchClick(key: string) {
+  function handleSwatchClick(key: ThemeColorKey) {
+    const themeColor = getThemeColorByPath(selectedTheme, key);
     const seedColor =
-      customColors[key] ??
-      (selectedTheme as any)?.[key] ??
-      currentThemePalette[0] ??
-      "";
+      customColors[key] ?? (themeColor || currentThemePalette[0] || "");
     setActiveColorKey(key);
     setActiveColorSession({
       key,
@@ -183,8 +188,7 @@ export default function MapSettingsSection({
   }
 
   function handleOpenThemeEditor() {
-    const defaultKey = DISPLAY_PALETTE_KEYS[0];
-    handleSwatchClick(defaultKey);
+    handleSwatchClick(defaultColorKey);
     setIsThemeEditing(true);
   }
 
@@ -199,26 +203,26 @@ export default function MapSettingsSection({
       clearColorPickerState();
       return;
     }
-    const activeKey = activeColorKey || DISPLAY_PALETTE_KEYS[0];
+    const activeKey = activeColorKey || defaultColorKey;
     const seedPalette = DISPLAY_PALETTE_KEYS.map(
       (key) =>
-        normalizeHexColor((selectedTheme as any)?.[key]) ||
+        normalizeHexColor(getThemeColorByPath(selectedTheme, key)) ||
         normalizeHexColor(currentThemePalette[0]) ||
         "",
     );
     setActiveColorSession({
       key: activeKey,
       seedColor:
-        seedPalette[DISPLAY_PALETTE_KEYS.indexOf(activeKey as any)] ||
+        seedPalette[DISPLAY_PALETTE_KEYS.indexOf(activeKey)] ||
         seedPalette[0] ||
         "",
       seedPalette,
     });
   }
 
-  function handleResetSingleColor(key: string) {
+  function handleResetSingleColor(key: ThemeColorKey) {
     const originalColor =
-      normalizeHexColor((selectedTheme as any)?.[key]) ||
+      normalizeHexColor(getThemeColorByPath(selectedTheme, key)) ||
       normalizeHexColor(currentThemePalette[0]) ||
       "";
     if (!originalColor) return;
@@ -241,7 +245,7 @@ export default function MapSettingsSection({
   }, [onColorEditorActiveChange]);
 
   if (isThemeEditing) {
-    const editorKey = activeColorKey || DISPLAY_PALETTE_KEYS[0];
+    const editorKey = activeColorKey || defaultColorKey;
     const editorChoices = activeColorKey
       ? activeColorChoices
       : buildDynamicColorChoices(
@@ -250,9 +254,7 @@ export default function MapSettingsSection({
         );
     const editorColor =
       customColors[editorKey] ??
-      (selectedTheme as any)?.[editorKey] ??
-      currentThemePalette[0] ??
-      "";
+      (getThemeColorByPath(selectedTheme, editorKey) || currentThemePalette[0] || "");
 
     return (
       <ThemeColorEditor

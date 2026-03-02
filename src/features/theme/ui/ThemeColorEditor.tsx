@@ -1,7 +1,8 @@
 import ColorPicker from "./ColorPicker";
+import type { ThemeColorKey } from "../domain/types";
 
 interface ColorTarget {
-  key: string;
+  key: ThemeColorKey;
   label: string;
   color: string;
   isActive: boolean;
@@ -13,7 +14,7 @@ interface ThemeColorEditorProps {
   onResetAllColors: () => void;
   onDone: () => void;
   colorTargets: ColorTarget[];
-  onTargetSelect: (key: string) => void;
+  onTargetSelect: (key: ThemeColorKey) => void;
   editorColor: string;
   suggestedColors: string[];
   moreColors: string[];

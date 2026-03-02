@@ -22,7 +22,7 @@ export function drawPosterText(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  theme: { text?: string },
+  theme: { ui?: { text?: string } },
   center: Coordinate,
   city: string,
   country: string,
@@ -30,7 +30,7 @@ export function drawPosterText(
   showPosterText: boolean,
   includeCredits: boolean = true,
 ): void {
-  const textColor = theme.text || "#111111";
+  const textColor = theme.ui?.text || "#111111";
   const titleFontFamily = fontFamily
     ? `"${fontFamily}", "Space Grotesk", sans-serif`
     : '"Space Grotesk", sans-serif';

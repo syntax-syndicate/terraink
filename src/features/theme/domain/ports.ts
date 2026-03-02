@@ -5,5 +5,5 @@ export interface IThemeRepository {
   getThemeOptions(): ThemeOption[];
   getThemeNames(): string[];
   getDefaultThemeName(): string;
-  getThemePalette(theme: Record<string, string>): string[];
+  getThemePalette(theme: unknown): string[];
 }

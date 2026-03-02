@@ -1,16 +1,31 @@
-export interface ThemeColors {
+export interface ThemeUiColors {
   bg: string;
   text: string;
-  gradient_color: string;
+}
+
+export interface ThemeRoadColors {
+  major: string;
+  minor_high: string;
+  minor_mid: string;
+  minor_low: string;
+  path: string;
+  outline: string;
+}
+
+export interface ThemeMapColors {
+  land: string;
   water: string;
+  waterway: string;
   parks: string;
-  road_motorway: string;
-  road_primary: string;
-  road_secondary: string;
-  road_tertiary: string;
-  road_residential: string;
-  road_default: string;
-  [key: string]: string;
+  buildings: string;
+  aeroway: string;
+  rail: string;
+  roads: ThemeRoadColors;
+}
+
+export interface ThemeColors {
+  ui: ThemeUiColors;
+  map: ThemeMapColors;
 }
 
 export interface ResolvedTheme extends ThemeColors {
@@ -18,7 +33,22 @@ export interface ResolvedTheme extends ThemeColors {
   description: string;
 }
 
-export type ThemeColorKey = string & keyof ThemeColors;
+export type ThemeColorKey =
+  | "ui.bg"
+  | "ui.text"
+  | "map.land"
+  | "map.water"
+  | "map.waterway"
+  | "map.parks"
+  | "map.buildings"
+  | "map.aeroway"
+  | "map.rail"
+  | "map.roads.major"
+  | "map.roads.minor_high"
+  | "map.roads.minor_mid"
+  | "map.roads.minor_low"
+  | "map.roads.path"
+  | "map.roads.outline";
 
 export interface ThemeOption {
   id: string;
@@ -27,24 +57,38 @@ export interface ThemeOption {
   palette: string[];
 }
 
-export const DISPLAY_PALETTE_KEYS: string[] = [
-  "bg",
-  "water",
-  "parks",
-  "road_motorway",
-  "road_primary",
-  "road_secondary",
-  "road_tertiary",
-  "text",
+export const DISPLAY_PALETTE_KEYS: ThemeColorKey[] = [
+  "ui.bg",
+  "ui.text",
+  "map.land",
+  "map.water",
+  "map.waterway",
+  "map.parks",
+  "map.buildings",
+  "map.aeroway",
+  "map.rail",
+  "map.roads.major",
+  "map.roads.minor_high",
+  "map.roads.minor_mid",
+  "map.roads.minor_low",
+  "map.roads.path",
+  "map.roads.outline",
 ];
 
-export const PALETTE_COLOR_LABELS: Record<string, string> = {
-  bg: "Background",
-  water: "Water",
-  parks: "Parks",
-  road_motorway: "Motorway",
-  road_primary: "Primary Road",
-  road_secondary: "Secondary Road",
-  road_tertiary: "Tertiary Road",
-  text: "Text",
+export const PALETTE_COLOR_LABELS: Record<ThemeColorKey, string> = {
+  "ui.bg": "Overlay",
+  "ui.text": "Text",
+  "map.land": "Land",
+  "map.water": "Water",
+  "map.waterway": "Waterways",
+  "map.parks": "Parks",
+  "map.buildings": "Buildings",
+  "map.aeroway": "Aeroway",
+  "map.rail": "Rail",
+  "map.roads.major": "Roads Major",
+  "map.roads.minor_high": "Roads Minor High",
+  "map.roads.minor_mid": "Roads Minor Mid",
+  "map.roads.minor_low": "Roads Minor Low",
+  "map.roads.path": "Roads Path",
+  "map.roads.outline": "Road Outline",
 };

@@ -41,7 +41,7 @@ export function compositeExport(
   ctx.drawImage(mapCanvas, 0, 0);
 
   // 2. Gradient fades
-  applyFades(ctx, width, height, theme.gradient_color || theme.bg);
+  applyFades(ctx, width, height, theme.ui.bg);
 
   // 3. Poster text
   drawPosterText(

@@ -5,10 +5,11 @@ import {
 } from "@/shared/utils/color";
 import type { ThemeOption, ResolvedTheme } from "./types";
 import { DISPLAY_PALETTE_KEYS } from "./types";
+import { getThemeColorByPath } from "./colorPaths";
 
 /** Default palette extractor — pulls colors from DISPLAY_PALETTE_KEYS. */
-function defaultGetThemePalette(theme: Record<string, string>): string[] {
-  return DISPLAY_PALETTE_KEYS.map((key) => theme[key]).filter(Boolean);
+function defaultGetThemePalette(theme: unknown): string[] {
+  return DISPLAY_PALETTE_KEYS.map((key) => getThemeColorByPath(theme, key)).filter(Boolean);
 }
 
 /**
@@ -18,7 +19,7 @@ export function createFallbackThemeOption(
   themeId: string,
   selectedTheme: ResolvedTheme | null,
   getThemePalette: (
-    theme: Record<string, string>,
+    theme: unknown,
   ) => string[] = defaultGetThemePalette,
 ): ThemeOption {
   return {
