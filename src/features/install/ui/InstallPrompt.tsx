@@ -3,11 +3,28 @@ import { FaMobileAlt as MobileIcon } from "react-icons/fa";
 import { FiShare as ShareIcon } from "react-icons/fi";
 import React from "react";
 
-export default function InstallPrompt() {
+interface InstallPromptProps {
+  variant?: "banner" | "headerButton";
+}
+
+export default function InstallPrompt({ variant = "banner" }: InstallPromptProps) {
   const { deferredPrompt, showIosHint, dismissed, dismiss, handleInstall } =
     useInstallPrompt();
 
   if (dismissed) return null;
+
+  if (variant === "headerButton") {
+    if (!deferredPrompt) return null;
+    return (
+      <button
+        type="button"
+        className="desktop-install-btn"
+        onClick={() => void handleInstall()}
+      >
+        Install
+      </button>
+    );
+  }
 
   if (deferredPrompt) {
     return (

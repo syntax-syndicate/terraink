@@ -2072,6 +2072,13 @@ button {
     filter 0.14s ease;
 }
 
+button.icon-only-btn {
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 button:not(:disabled):hover {
   transform: translateY(-1px);
   filter: brightness(1.05);

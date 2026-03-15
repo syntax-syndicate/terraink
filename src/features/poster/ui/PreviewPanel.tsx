@@ -22,6 +22,7 @@ import {
   RotateLeftIcon,
   RotateRightIcon,
   LockIcon,
+  UnlockIcon,
   RecenterIcon,
   TrashIcon,
 } from "@/shared/ui/Icons";
@@ -48,8 +49,7 @@ import {
 } from "@/features/layout/infrastructure/layoutRepository";
 
 const LOCKED_HINT = "Map is locked to prevent unintended movement.";
-const EDIT_HINT_ACTIVE =
-  "Drag to move and scroll or pinch to zoom.\nUse arrow keys to move the map and +/- to zoom.";
+const UNLOCK_HINT = `${LOCKED_HINT}\nClick to unlock map editing.`;
 const RECENTER_HINT = "Recenter map to the current location";
 const COUNTRY_VIEW_ZOOM_LEVEL = 10;
 const CONTINENT_VIEW_ZOOM_LEVEL = 6;
@@ -129,6 +129,8 @@ export default function PreviewPanel() {
   } = useMapSync();
 
   const frameRef = useRef<HTMLDivElement | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ghostMapRef = useRef<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [mapBearing, setMapBearing] = useState(0);
   const [isRotationEnabled, setIsRotationEnabled] = useState(false);
@@ -404,6 +406,23 @@ export default function PreviewPanel() {
       ) : null}
 
       <div className="poster-viewport">
+        {/* Desktop ghost map: full-bleed map behind the poster frame at reduced opacity */}
+        <div className="poster-ghost-layer" aria-hidden="true">
+          <MapPreview
+            style={mapStyle}
+            center={mapCenter}
+            zoom={mapZoom}
+            mapRef={ghostMapRef}
+            interactive={false}
+            allowRotation={false}
+            minZoom={mapMinZoom}
+            maxZoom={mapMaxZoom}
+            overzoomScale={MAP_OVERZOOM_SCALE}
+          />
+        </div>
+        <div className="desktop-layout-label" aria-hidden="true">
+          {layoutLabel}
+        </div>
         <div
           ref={frameRef}
           className="poster-frame"
@@ -451,174 +470,165 @@ export default function PreviewPanel() {
             includeCredits={form.includeCredits}
             showOverlay={form.showMarkers}
           />
-        </div>
-      </div>
 
-      <section className="map-controls-section" aria-label="Map controls">
-        <div className="map-controls">
-          {!isEditing ? (
-            <>
-              <div className="map-control-group">
-                {!isMarkerEditorActive ? (
-                  <>
-                    <button
-                      type="button"
-                      className="map-control-btn"
-                      onClick={handleRecenter}
-                      title={RECENTER_HINT}
-                    >
-                      <RecenterIcon />
-                      <span>Recenter</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="map-control-btn map-control-btn--primary"
-                      onClick={handleStartEditing}
-                      title="Unlock map editing"
-                    >
-                      <EditIcon />
-                      <span>Edit Map</span>
-                    </button>
-                  </>
-                ) : null}
-                <button
-                  type="button"
-                  className={`map-control-btn${isMarkerEditorActive ? " is-active" : ""}`}
-                  onClick={handleToggleMarkerEditing}
-                  disabled={!isMarkerEditorActive && state.markers.length === 0}
-                >
-                  {isMarkerEditorActive ? <FinishIcon /> : <EditIcon />}
-                  <span>{isMarkerEditorActive ? "Done" : "Edit Markers"}</span>
-                </button>
-                {isMarkerEditorActive ? (
+          <div className="map-controls" aria-label="Map controls">
+            {!isEditing ? (
+              <>
+                <div className="map-control-group">
+                  {!isMarkerEditorActive ? (
+                    <>
+                      <button
+                        type="button"
+                        className="map-control-btn"
+                        onClick={handleRecenter}
+                        title={RECENTER_HINT}
+                      >
+                        <RecenterIcon />
+                        <span>Recenter</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="map-control-btn map-control-btn--primary"
+                        onClick={handleStartEditing}
+                        title={UNLOCK_HINT}
+                      >
+                        <UnlockIcon />
+                        <span>Edit Map</span>
+                      </button>
+                    </>
+                  ) : null}
                   <button
                     type="button"
-                    className="map-control-btn map-control-btn--marker-reset"
-                    onClick={handleResetMarkers}
-                    title="Reset marker defaults"
+                    className={`map-control-btn${isMarkerEditorActive ? " is-active" : ""}`}
+                    onClick={handleToggleMarkerEditing}
+                    disabled={!isMarkerEditorActive && state.markers.length === 0}
                   >
-                    <RotateLeftIcon />
-                    <span>Reset Markers</span>
+                    {isMarkerEditorActive ? <FinishIcon /> : <EditIcon />}
+                    <span>{isMarkerEditorActive ? "Done" : "Edit Markers"}</span>
                   </button>
-                ) : null}
-                {isMarkerEditorActive ? (
+                  {isMarkerEditorActive ? (
+                    <button
+                      type="button"
+                      className="map-control-btn map-control-btn--marker-reset"
+                      onClick={handleResetMarkers}
+                      title="Reset marker defaults"
+                    >
+                      <RotateLeftIcon />
+                      <span>Reset Markers</span>
+                    </button>
+                  ) : null}
+                  {isMarkerEditorActive ? (
+                    <button
+                      type="button"
+                      className="map-control-btn map-control-btn--danger"
+                      onClick={handleDeleteAllMarkers}
+                      title="Delete all markers"
+                      disabled={state.markers.length === 0}
+                    >
+                      <TrashIcon />
+                      <span>Delete Markers</span>
+                    </button>
+                  ) : null}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="map-control-group">
                   <button
                     type="button"
-                    className="map-control-btn map-control-btn--danger"
-                    onClick={handleDeleteAllMarkers}
-                    title="Delete all markers"
-                    disabled={state.markers.length === 0}
+                    className="map-control-btn"
+                    onClick={handleRecenter}
+                    title={RECENTER_HINT}
                   >
-                    <TrashIcon />
-                    <span>Delete Markers</span>
+                    <RecenterIcon />
+                    <span>Recenter</span>
                   </button>
-                ) : null}
-              </div>
-              <p className="map-control-hint">
-                <LockIcon className="map-control-hint-icon" />
-                {isMarkerEditorActive
-                  ? "Map editing is disabled while marker editor is open."
-                  : LOCKED_HINT}
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="map-control-group">
-                <button
-                  type="button"
-                  className="map-control-btn"
-                  onClick={handleRecenter}
-                  title={RECENTER_HINT}
-                >
-                  <RecenterIcon />
-                  <span>Recenter</span>
-                </button>
-                <button
-                  type="button"
-                  className="map-control-btn map-control-btn--primary"
-                  onClick={handleFinishEditing}
-                  title="Lock map editing"
-                >
-                  <FinishIcon />
-                  <span>Finish</span>
-                </button>
-                <button
-                  type="button"
-                  className={`map-control-btn${isRotationEnabled ? " is-active" : ""}`}
-                  onClick={handleToggleRotation}
-                  title={
-                    isRotationEnabled ? "Disable rotation" : "Enable rotation"
-                  }
-                >
-                  <RotateIcon />
-                  <span>
-                    {isRotationEnabled ? "Disable Rotation" : "Enable Rotation"}
-                  </span>
-                </button>
-              </div>
-              <p className="map-control-hint">{EDIT_HINT_ACTIVE}</p>
-              <div className="map-control-group map-control-slider-row">
-                <button
-                  type="button"
-                  className="map-control-btn"
-                  onClick={handleZoomOut}
-                  title="Zoom out"
-                >
-                  <MinusIcon />
-                </button>
-                <input
-                  className="map-control-slider"
-                  type="range"
-                  min={mapMinZoom}
-                  max={mapMaxZoom}
-                  step={0.1}
-                  value={mapZoom}
-                  onChange={handleZoomSliderChange}
-                  aria-label="Zoom level"
-                />
-                <button
-                  type="button"
-                  className="map-control-btn"
-                  onClick={handleZoomIn}
-                  title="Zoom in"
-                >
-                  <PlusIcon />
-                </button>
-              </div>
-              {isRotationEnabled ? (
+                  <button
+                    type="button"
+                    className="map-control-btn map-control-btn--primary"
+                    onClick={handleFinishEditing}
+                    title="Lock map editing"
+                  >
+                    <LockIcon />
+                    <span>Lock Map</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`map-control-btn${isRotationEnabled ? " is-active" : ""}`}
+                    onClick={handleToggleRotation}
+                    title={
+                      isRotationEnabled ? "Disable rotation" : "Enable rotation"
+                    }
+                  >
+                    <RotateIcon />
+                    <span>
+                      {isRotationEnabled ? "Disable Rotation" : "Enable Rotation"}
+                    </span>
+                  </button>
+                </div>
                 <div className="map-control-group map-control-slider-row">
                   <button
                     type="button"
                     className="map-control-btn"
-                    onClick={() => handleRotateBy(-15)}
-                    title="Rotate left 15 degrees"
+                    onClick={handleZoomOut}
+                    title="Zoom out"
                   >
-                    <RotateLeftIcon />
+                    <MinusIcon />
                   </button>
                   <input
                     className="map-control-slider"
                     type="range"
-                    min={-180}
-                    max={180}
-                    step={15}
-                    value={Math.round(mapBearing / 15) * 15}
-                    onChange={handleRotationSliderChange}
-                    aria-label="Rotation angle"
+                    min={mapMinZoom}
+                    max={mapMaxZoom}
+                    step={0.1}
+                    value={mapZoom}
+                    onChange={handleZoomSliderChange}
+                    aria-label="Zoom level"
                   />
                   <button
                     type="button"
                     className="map-control-btn"
-                    onClick={() => handleRotateBy(15)}
-                    title="Rotate right 15 degrees"
+                    onClick={handleZoomIn}
+                    title="Zoom in"
                   >
-                    <RotateRightIcon />
+                    <PlusIcon />
                   </button>
                 </div>
-              ) : null}
-            </>
-          )}
+                {isRotationEnabled ? (
+                  <div className="map-control-group map-control-slider-row">
+                    <button
+                      type="button"
+                      className="map-control-btn"
+                      onClick={() => handleRotateBy(-15)}
+                      title="Rotate left 15 degrees"
+                    >
+                      <RotateLeftIcon />
+                    </button>
+                    <input
+                      className="map-control-slider"
+                      type="range"
+                      min={-180}
+                      max={180}
+                      step={15}
+                      value={Math.round(mapBearing / 15) * 15}
+                      onChange={handleRotationSliderChange}
+                      aria-label="Rotation angle"
+                    />
+                    <button
+                      type="button"
+                      className="map-control-btn"
+                      onClick={() => handleRotateBy(15)}
+                      title="Rotate right 15 degrees"
+                    >
+                      <RotateRightIcon />
+                    </button>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </div>
         </div>
-      </section>
+      </div>
 
       <SettingsInfo
         location={form.location || DEFAULT_LOCATION_LABEL}
