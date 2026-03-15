@@ -1,25 +1,44 @@
-import type { ThemeOption } from "../domain/types";
+import {
+  DISPLAY_PALETTE_KEYS,
+  type ThemeOption,
+  type ThemeColorKey,
+} from "../domain/types";
 
 interface ThemeCardProps {
   themeOption: ThemeOption | null;
   onClick?: () => void;
   isSelected?: boolean;
-  showName?: boolean;
+  showFullPalette?: boolean;
 }
 
 export default function ThemeCard({
   themeOption,
   onClick,
   isSelected = false,
-  showName = true,
+  showFullPalette = false,
 }: ThemeCardProps) {
   if (!themeOption) {
     return null;
   }
 
-  const palette = Array.isArray(themeOption.palette) ? themeOption.palette : [];
-  const description =
-    themeOption.description?.trim() || "No description available.";
+  const majorPaletteKeys: ThemeColorKey[] = showFullPalette
+    ? DISPLAY_PALETTE_KEYS
+    : [
+        "ui.text",
+        "map.land",
+        "map.roads.major",
+        "map.roads.minor_high",
+        "map.roads.minor_mid",
+      ];
+  const majorPaletteIndices = majorPaletteKeys
+    .map((key) => DISPLAY_PALETTE_KEYS.indexOf(key))
+    .filter((index) => index >= 0);
+  const palette = Array.isArray(themeOption.palette)
+    ? majorPaletteIndices
+        .map((index) => themeOption.palette[index])
+        .filter((color): color is string => Boolean(color))
+        .filter((color, index, colors) => colors.indexOf(color) === index)
+    : [];
   const className = ["theme-card", isSelected ? "is-selected" : ""]
     .filter(Boolean)
     .join(" ");
@@ -30,9 +49,18 @@ export default function ThemeCard({
       className={className}
       onClick={onClick}
       aria-pressed={isSelected}
+      aria-label={themeOption.name}
     >
-      {showName ? <p className="theme-card-name">{themeOption.name}</p> : null}
-      <div className="theme-card-palette" aria-hidden="true">
+      <p className="theme-card-name">{themeOption.name}</p>
+      <div
+        className={[
+          "theme-card-palette",
+          showFullPalette ? "theme-card-palette--full" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        aria-hidden="true"
+      >
         {palette.map((color, index) => (
           <span
             key={`${themeOption.id}-${color}-${index}`}
@@ -42,7 +70,6 @@ export default function ThemeCard({
           />
         ))}
       </div>
-      <p className="theme-card-description">{description}</p>
     </button>
   );
 }

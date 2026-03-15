@@ -107,7 +107,7 @@ const referenceAliases: Record<string, string> = {
 const preferredThemeOrder = [
   "midnight_blue",
   "terracotta",
-  "neon_cyberpunk",
+  "neon",
   "coral",
   "heatwave",
   "ruby",

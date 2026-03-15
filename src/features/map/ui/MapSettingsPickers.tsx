@@ -33,7 +33,7 @@ export default function MapSettingsPickers({
         titleId="theme-picker-title"
         onClose={onClosePicker}
       >
-        <div className="picker-option-list">
+        <div className="picker-option-list picker-option-list--themes">
           {themeOptions.map((themeOption) => (
             <ThemeCard
               key={themeOption.id}

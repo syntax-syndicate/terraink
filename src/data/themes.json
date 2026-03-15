@@ -175,8 +175,8 @@
         }
       }
     },
-    "neon_cyberpunk": {
-      "name": "Neon Cyberpunk",
+    "neon": {
+      "name": "Neon",
       "description": "Dark background with electric pink/cyan - bold night city vibes",
       "ui": {
         "bg": "#0D0D1A",
@@ -251,7 +251,7 @@
       }
     },
     "contrast_zones": {
-      "name": "Contrast Zones",
+      "name": "Contrast",
       "description": "Strong contrast showing urban density - darker in center, lighter at edges",
       "ui": {
         "bg": "#FFFFFF",

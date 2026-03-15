@@ -148,6 +148,7 @@ export default function MapSettingsSection({
   function openThemePicker() {
     setActivePicker("theme");
   }
+
   function openLayoutPicker() {
     setActivePicker("layout");
   }
@@ -307,10 +308,12 @@ export default function MapSettingsSection({
           )
         ) : (
           <ThemeSummarySection
-            themeName={selectedThemeOption.name}
-            themeOption={summaryThemeOption}
-            onCustomize={handleOpenThemeEditor}
+            themeOptions={themeOptions}
+            selectedThemeId={form.theme}
+            selectedThemeOption={summaryThemeOption}
+            onThemeSelect={handleThemeSelect}
             onOpenThemePicker={openThemePicker}
+            onCustomize={handleOpenThemeEditor}
           />
         )}
       </div>
