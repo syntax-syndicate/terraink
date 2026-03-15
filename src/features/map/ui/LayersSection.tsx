@@ -1,11 +1,21 @@
 import type { PosterForm } from "@/features/poster/application/posterReducer";
+import MapDimensionFields from "./MapDimensionFields";
 
 interface LayersSectionProps {
   form: PosterForm;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  minPosterCm: number;
+  maxPosterCm: number;
+  onNumericFieldBlur: (event: React.FocusEvent<HTMLInputElement>) => void;
 }
 
-export default function LayersSection({ form, onChange }: LayersSectionProps) {
+export default function LayersSection({
+  form,
+  onChange,
+  minPosterCm,
+  maxPosterCm,
+  onNumericFieldBlur,
+}: LayersSectionProps) {
   return (
     <section className="panel-block">
       <h2>Map Layers</h2>
@@ -81,6 +91,20 @@ export default function LayersSection({ form, onChange }: LayersSectionProps) {
           <span className="theme-switch-track" aria-hidden="true" />
         </span>
       </label>
+
+      <div className="map-details-section">
+        <h3 className="map-details-subtitle">Map Details</h3>
+        <div className="map-details-card">
+          <MapDimensionFields
+            form={form}
+            minPosterCm={minPosterCm}
+            maxPosterCm={maxPosterCm}
+            onChange={onChange}
+            onNumericFieldBlur={onNumericFieldBlur}
+            showSizeFields={false}
+          />
+        </div>
+      </div>
     </section>
   );
 }

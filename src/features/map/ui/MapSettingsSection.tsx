@@ -14,13 +14,13 @@ import {
 } from "@/features/theme/domain/colorSuggestions";
 import LayoutCard from "@/features/layout/ui/LayoutCard";
 import MapDimensionFields from "./MapDimensionFields";
-import MapSettingsPickers from "./MapSettingsPickers";
 import ColorPicker from "@/features/theme/ui/ColorPicker";
 import ThemeColorEditor from "@/features/theme/ui/ThemeColorEditor";
 import ThemeSummarySection from "@/features/theme/ui/ThemeSummarySection";
+import { CheckIcon, EditIcon } from "@/shared/ui/Icons";
 import type { PosterForm } from "@/features/poster/application/posterReducer";
 import type { ResolvedTheme } from "@/features/theme/domain/types";
-import type { LayoutGroup, Layout } from "@/features/layout/domain/types";
+import type { LayoutGroup } from "@/features/layout/domain/types";
 
 const FALLBACK_COLOR = "#000000";
 
@@ -57,8 +57,8 @@ export default function MapSettingsSection({
   onResetColors,
   onColorEditorActiveChange,
 }: MapSettingsSectionProps) {
-  const [activePicker, setActivePicker] = useState("");
   const [isThemeEditing, setIsThemeEditing] = useState(false);
+  const [isLayoutEditing, setIsLayoutEditing] = useState(false);
   const defaultColorKey: ThemeColorKey = DISPLAY_PALETTE_KEYS[0] ?? "ui.bg";
   const [activeColorKey, setActiveColorKey] = useState<ThemeColorKey | null>(
     null,
@@ -144,13 +144,10 @@ export default function MapSettingsSection({
     if (match) return match;
     return createCustomLayoutOption(Number(form.width), Number(form.height));
   }, [form.height, form.layout, form.width, layoutOptions]);
-
-  function openLayoutPicker() {
-    setActivePicker("layout");
-  }
-  function closePicker() {
-    setActivePicker("");
-  }
+  const selectedLayoutDescription =
+    selectedLayoutOption.id === "custom"
+      ? "Your custom layout."
+      : selectedLayoutOption.description?.trim() || "No description available.";
 
   function clearColorPickerState() {
     setActiveColorKey(null);
@@ -159,13 +156,12 @@ export default function MapSettingsSection({
 
   function handleThemeSelect(themeId: string) {
     onThemeChange(themeId);
-    closePicker();
     clearColorPickerState();
   }
 
-  function handleLayoutSelect(layoutId: string) {
+  function handleLayoutSelectInline(layoutId: string) {
     onLayoutChange(layoutId);
-    closePicker();
+    setIsLayoutEditing(false);
   }
 
   function handleSwatchClick(key: ThemeColorKey) {
@@ -188,6 +184,15 @@ export default function MapSettingsSection({
   function handleDoneThemeEditor() {
     setIsThemeEditing(false);
     clearColorPickerState();
+  }
+
+  function handleOpenLayoutEditor() {
+    setIsLayoutEditing(true);
+    onLayoutChange("custom");
+  }
+
+  function handleDoneLayoutEditor() {
+    setIsLayoutEditing(false);
   }
 
   function handleResetThemeColors() {
@@ -315,43 +320,74 @@ export default function MapSettingsSection({
 
       <div className="map-settings-layout-part">
         <h2>Layout</h2>
-        <p className="layout-active-label">Layout: {selectedLayoutOption.name}</p>
-        <LayoutCard
-          layoutOption={selectedLayoutOption}
-          onClick={openLayoutPicker}
-        />
+        <div className="layout-summary-head">
+          <div className="layout-summary-copy">
+            <p className="layout-summary-label">
+              LAYOUT:{" "}
+              <span className="layout-summary-label-name">
+                {selectedLayoutOption.name}
+              </span>
+            </p>
+            <p className="layout-summary-description">
+              {selectedLayoutDescription}
+            </p>
+          </div>
+          {isLayoutEditing ? (
+            <button
+              type="button"
+              className="theme-customize-btn"
+              onClick={handleDoneLayoutEditor}
+              aria-label="Done editing layout"
+            >
+              <span className="theme-customize-icon" aria-hidden="true">
+                <CheckIcon />
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="theme-customize-btn"
+              onClick={handleOpenLayoutEditor}
+              aria-label="Customize layout size"
+            >
+              <span className="theme-customize-icon" aria-hidden="true">
+                <EditIcon />
+              </span>
+            </button>
+          )}
+        </div>
 
-        <MapDimensionFields
-          form={form}
-          minPosterCm={minPosterCm}
-          maxPosterCm={maxPosterCm}
-          onChange={onChange}
-          onNumericFieldBlur={onNumericFieldBlur}
-          showDistanceField={false}
-        />
-
-        <div className="map-details-section">
-          <h3 className="map-details-subtitle">Map Details</h3>
-          <div className="map-details-card">
+        {isLayoutEditing ? (
+          <div className="layout-custom-editor">
             <MapDimensionFields
               form={form}
               minPosterCm={minPosterCm}
               maxPosterCm={maxPosterCm}
               onChange={onChange}
               onNumericFieldBlur={onNumericFieldBlur}
-              showSizeFields={false}
+              showDistanceField={false}
             />
           </div>
-        </div>
+        ) : (
+          <div className="layout-inline-groups">
+            {layoutGroups.map((group) => (
+              <section key={group.id} className="layout-inline-group">
+                <h3>{group.name}</h3>
+                <div className="layout-inline-list">
+                  {group.options.map((layoutOption) => (
+                    <LayoutCard
+                      key={layoutOption.id}
+                      layoutOption={layoutOption}
+                      isSelected={layoutOption.id === form.layout}
+                      onClick={() => handleLayoutSelectInline(layoutOption.id)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
       </div>
-
-      <MapSettingsPickers
-        activePicker={activePicker}
-        onClosePicker={closePicker}
-        layoutGroups={layoutGroups}
-        selectedLayoutId={form.layout}
-        onLayoutSelect={handleLayoutSelect}
-      />
     </section>
   );
 }

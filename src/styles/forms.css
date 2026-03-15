@@ -856,6 +856,63 @@ button.color-editor-target:focus-visible {
   color: #d9e7f2;
 }
 
+.layout-summary-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.layout-summary-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.layout-summary-label {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #e7f2fb;
+  text-transform: uppercase;
+}
+
+.layout-summary-label-name {
+  text-transform: uppercase;
+}
+
+.layout-summary-description {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.42;
+  color: #b9cfde;
+}
+
+.layout-custom-editor {
+  margin-bottom: 10px;
+}
+
+.layout-inline-groups {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.layout-inline-group h3 {
+  margin: 0 0 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #a8bfd1;
+  text-transform: uppercase;
+}
+
+.layout-inline-list {
+  display: grid;
+  gap: 8px;
+}
+
 .theme-card {
   position: relative;
   width: 100%;

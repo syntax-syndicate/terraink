@@ -367,7 +367,13 @@ export default function SettingsPanel() {
         >
           <div className="accordion-body-inner">
             {!isAuxEditorActive && (
-              <LayersSection form={state.form} onChange={handleChange} />
+              <LayersSection
+                form={state.form}
+                onChange={handleChange}
+                minPosterCm={MIN_POSTER_CM}
+                maxPosterCm={MAX_POSTER_CM}
+                onNumericFieldBlur={handleNumericFieldBlur}
+              />
             )}
           </div>
         </div>

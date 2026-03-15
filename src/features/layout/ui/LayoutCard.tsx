@@ -21,9 +21,6 @@ export default function LayoutCard({
   if (!layoutOption) {
     return null;
   }
-
-  const description =
-    layoutOption.description?.trim() || "No description available.";
   const className = ["layout-card", isSelected ? "is-selected" : ""]
     .filter(Boolean)
     .join(" ");
@@ -51,7 +48,6 @@ export default function LayoutCard({
           />
         ) : null}
       </div>
-      <p className="layout-card-description">{description}</p>
     </button>
   );
 }
