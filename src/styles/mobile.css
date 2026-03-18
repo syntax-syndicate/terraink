@@ -22,6 +22,14 @@
   display: none;
 }
 
+.mobile-marker-edit-done {
+  display: none;
+}
+
+.mobile-marker-size-bar {
+  display: none;
+}
+
 /* ── Mobile persistent footer — hidden on desktop ── */
 
 .mobile-persistent-footer {
@@ -442,6 +450,39 @@
     pointer-events: none;
   }
 
+  .mobile-marker-edit-done {
+    position: fixed;
+    left: 16px;
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    z-index: 101;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid rgba(112, 184, 222, 0.48);
+    border-radius: 12px;
+    background: rgba(10, 20, 31, 0.96);
+    color: #d8e8f4;
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.38),
+      0 2px 8px rgba(0, 0, 0, 0.24);
+    font-family: "Spline Sans Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .mobile-marker-edit-done svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  html[data-display-mode="standalone"] .mobile-marker-edit-done {
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+  }
+
   .mobile-export-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -639,6 +680,7 @@
     background: rgba(2, 6, 10, 0.22);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    touch-action: none;
     animation: backdrop-fadein 0.2s ease;
   }
 
@@ -749,6 +791,10 @@
 
   .mobile-drawer-content .map-dimension-fields {
     background: rgba(11, 20, 30, 0.98);
+  }
+
+  .mobile-drawer-content .panel-block h2 {
+    display: none;
   }
 
   /* Accordion: hide headers on mobile (tabs handle navigation) */
@@ -1094,6 +1140,48 @@
     border-color: rgba(157, 189, 214, 0.3);
     font-family: "Spline Sans Mono", monospace;
     font-size: 0.75rem;
+    color: #def2ff;
+  }
+
+  .mobile-marker-size-bar {
+    display: grid;
+    gap: 6px;
+    margin: 6px 8px 0;
+    padding: 8px 10px;
+    border: 1px solid rgba(157, 189, 214, 0.24);
+    border-radius: 10px;
+    background: rgba(16, 29, 42, 0.94);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.38);
+    position: relative;
+    z-index: 30;
+  }
+
+  .mobile-marker-size-bar__label {
+    margin: 0;
+    font-family: "Spline Sans Mono", monospace;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(188, 219, 238, 0.78);
+  }
+
+  .mobile-marker-size-bar__controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mobile-marker-size-bar__slider {
+    width: 100%;
+    margin: 0;
+  }
+
+  .mobile-marker-size-bar__value {
+    min-width: 42px;
+    text-align: right;
+    font-family: "Spline Sans Mono", monospace;
+    font-size: 0.72rem;
     color: #def2ff;
   }
 

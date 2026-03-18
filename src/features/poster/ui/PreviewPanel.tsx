@@ -52,7 +52,13 @@ const DEFAULT_LOCATION_LABEL =
 export default function PreviewPanel() {
   const { state, dispatch, effectiveTheme, mapStyle, mapRef } =
     usePosterContext();
-  const { form, selectedLocation, userLocation, isMarkerEditorActive } = state;
+  const {
+    form,
+    selectedLocation,
+    userLocation,
+    isMarkerEditorActive,
+    activeMarkerId,
+  } = state;
   const hasVisibleMarkers = form.showMarkers && state.markers.length > 0;
   const {
     mapCenter,
@@ -342,13 +348,6 @@ export default function PreviewPanel() {
       });
   }, [mapRef, selectedLocation, userLocation, dispatch]);
 
-  const handleToggleMarkerEditing = useCallback(() => {
-    dispatch({
-      type: "SET_MARKER_EDITOR_ACTIVE",
-      active: !isMarkerEditorActive,
-    });
-  }, [dispatch, isMarkerEditorActive]);
-
   const handleMarkerPositionChange = useCallback(
     (markerId: string, lat: number, lon: number) => {
       dispatch({
@@ -356,6 +355,13 @@ export default function PreviewPanel() {
         markerId,
         changes: { lat, lon },
       });
+    },
+    [dispatch],
+  );
+
+  const handleMarkerActiveChange = useCallback(
+    (markerId: string | null) => {
+      dispatch({ type: "SET_ACTIVE_MARKER", markerId });
     },
     [dispatch],
   );
@@ -370,9 +376,6 @@ export default function PreviewPanel() {
     },
     [dispatch],
   );
-  const markerResizeHint = isMobileViewport
-    ? "Tip: tap marker, then use 2 fingers to resize."
-    : "Tip: select a marker, then use mouse wheel or +/- keys.";
 
   return (
     <section className="preview-panel">
@@ -426,6 +429,8 @@ export default function PreviewPanel() {
               customIcons={state.customMarkerIcons}
               mapRef={mapRef}
               isMarkerEditMode={isMarkerEditorActive}
+              activeMarkerId={activeMarkerId}
+              onActiveMarkerChange={handleMarkerActiveChange}
               onMarkerPositionChange={handleMarkerPositionChange}
               onMarkerSizeChange={handleMarkerSizeChange}
             />
@@ -450,18 +455,13 @@ export default function PreviewPanel() {
                   <MapPrimaryControls
                     isMapEditing={false}
                     isMarkerEditorActive={isMarkerEditorActive}
-                    hasMarkers={state.markers.length > 0}
                     recenterHint={RECENTER_HINT}
                     unlockHint={UNLOCK_HINT}
                     onRecenter={handleRecenter}
                     onStartEditing={handleStartEditing}
                     onFinishEditing={handleFinishEditing}
-                    onToggleMarkerEditing={handleToggleMarkerEditing}
                   />
                 </div>
-                {isMarkerEditorActive ? (
-                  <p className="map-control-hint">{markerResizeHint}</p>
-                ) : null}
               </>
             ) : (
               <>
@@ -469,33 +469,45 @@ export default function PreviewPanel() {
                   <MapPrimaryControls
                     isMapEditing
                     isMarkerEditorActive={isMarkerEditorActive}
-                    hasMarkers={state.markers.length > 0}
                     recenterHint={RECENTER_HINT}
                     unlockHint={UNLOCK_HINT}
                     onRecenter={handleRecenter}
                     onStartEditing={handleStartEditing}
                     onFinishEditing={handleFinishEditing}
-                    onToggleMarkerEditing={handleToggleMarkerEditing}
                   />
+                  {isMobileViewport ? (
+                    <button
+                      type="button"
+                      className={`map-control-btn${isRotationEnabled ? " is-active" : ""}`}
+                      onClick={handleToggleRotation}
+                      title={
+                        isRotationEnabled ? "Disable rotation" : "Enable rotation"
+                      }
+                    >
+                      <RotateIcon />
+                      <span>
+                        {isRotationEnabled ? "Disable Rotation" : "Enable Rotation"}
+                      </span>
+                    </button>
+                  ) : null}
                 </div>
-                {isMarkerEditorActive ? (
-                  <p className="map-control-hint">{markerResizeHint}</p>
+                {!isMobileViewport ? (
+                  <div className="map-control-group">
+                    <button
+                      type="button"
+                      className={`map-control-btn${isRotationEnabled ? " is-active" : ""}`}
+                      onClick={handleToggleRotation}
+                      title={
+                        isRotationEnabled ? "Disable rotation" : "Enable rotation"
+                      }
+                    >
+                      <RotateIcon />
+                      <span>
+                        {isRotationEnabled ? "Disable Rotation" : "Enable Rotation"}
+                      </span>
+                    </button>
+                  </div>
                 ) : null}
-                <div className="map-control-group">
-                  <button
-                    type="button"
-                    className={`map-control-btn${isRotationEnabled ? " is-active" : ""}`}
-                    onClick={handleToggleRotation}
-                    title={
-                      isRotationEnabled ? "Disable rotation" : "Enable rotation"
-                    }
-                  >
-                    <RotateIcon />
-                    <span>
-                      {isRotationEnabled ? "Disable Rotation" : "Enable Rotation"}
-                    </span>
-                  </button>
-                </div>
                 {!isMobileViewport ? (
                   <div className="map-control-group map-control-slider-row">
                     <button

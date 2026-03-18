@@ -117,7 +117,13 @@
 }
 
 .poster-marker.is-selected {
-  filter: drop-shadow(0 0 8px rgba(94, 206, 255, 0.75));
+  filter: none;
+}
+
+.poster-marker.is-selected .marker-visual {
+  border: 2px solid var(--marker-highlight-color, rgba(94, 206, 255, 0.9));
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(7, 16, 24, 0.68);
 }
 
 .poster-city {

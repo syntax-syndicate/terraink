@@ -50,6 +50,7 @@ export interface PosterState {
   customMarkerIcons: MarkerIconDefinition[];
   markerDefaults: MarkerDefaults;
   isMarkerEditorActive: boolean;
+  activeMarkerId: string | null;
   error: string;
   isExporting: boolean;
   isLocationFocused: boolean;
@@ -83,6 +84,7 @@ export type PosterAction =
   | { type: "FINISH_EXPORT" }
   | { type: "FAIL_EXPORT"; error: string }
   | { type: "SET_MARKER_EDITOR_ACTIVE"; active: boolean }
+  | { type: "SET_ACTIVE_MARKER"; markerId: string | null }
   | { type: "ADD_MARKER"; marker: MarkerItem }
   | { type: "UPDATE_MARKER"; markerId: string; changes: Partial<MarkerItem> }
   | { type: "REMOVE_MARKER"; markerId: string }
@@ -227,7 +229,17 @@ export function posterReducer(
       return { ...state, error: action.error, isExporting: false };
 
     case "SET_MARKER_EDITOR_ACTIVE":
-      return { ...state, isMarkerEditorActive: action.active };
+      return {
+        ...state,
+        isMarkerEditorActive: action.active,
+        activeMarkerId: action.active ? state.activeMarkerId : null,
+      };
+
+    case "SET_ACTIVE_MARKER":
+      return {
+        ...state,
+        activeMarkerId: action.markerId,
+      };
 
     case "ADD_MARKER":
       return {
@@ -257,12 +269,16 @@ export function posterReducer(
       return {
         ...state,
         markers: state.markers.filter((marker) => marker.id !== action.markerId),
+        activeMarkerId:
+          state.activeMarkerId === action.markerId ? null : state.activeMarkerId,
       };
 
     case "CLEAR_MARKERS":
       return {
         ...state,
         markers: [],
+        activeMarkerId: null,
+        isMarkerEditorActive: false,
       };
 
     case "ADD_CUSTOM_MARKER_ICON":

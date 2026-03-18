@@ -88,6 +88,7 @@ const INITIAL_STATE: PosterState = {
     color: getTheme(defaultThemeName).ui.text,
   },
   isMarkerEditorActive: false,
+  activeMarkerId: null,
   error: "",
   isExporting: false,
   isLocationFocused: false,

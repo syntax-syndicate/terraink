@@ -1,10 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { MarkerIconDefinition, MarkerItem } from "@/features/markers/domain/types";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import type {
+  MarkerIconDefinition,
+  MarkerItem,
+} from "@/features/markers/domain/types";
 import type { MapInstanceRef } from "@/features/map/domain/types";
 import { MAP_OVERZOOM_SCALE } from "@/features/map/infrastructure/constants";
 import { findMarkerIcon } from "@/features/markers/infrastructure/iconRegistry";
 import MarkerVisual from "./MarkerVisual";
-import { MAX_MARKER_SIZE, MIN_MARKER_SIZE } from "@/features/markers/infrastructure/constants";
+import {
+  MAX_MARKER_SIZE,
+  MIN_MARKER_SIZE,
+} from "@/features/markers/infrastructure/constants";
 import { clamp } from "@/shared/geo/math";
 
 interface MarkerOverlayProps {
@@ -12,8 +18,27 @@ interface MarkerOverlayProps {
   customIcons: MarkerIconDefinition[];
   mapRef: MapInstanceRef;
   isMarkerEditMode?: boolean;
+  activeMarkerId?: string | null;
+  onActiveMarkerChange?: (markerId: string | null) => void;
   onMarkerPositionChange?: (markerId: string, lat: number, lon: number) => void;
   onMarkerSizeChange?: (markerId: string, size: number) => void;
+}
+
+function getOppositeHighlightColor(input: string): string {
+  const hexMatch = input.trim().match(/^#?([0-9a-f]{6})$/i);
+  if (!hexMatch) {
+    return "#ffd84d";
+  }
+
+  const hex = hexMatch[1];
+  const r = 255 - Number.parseInt(hex.slice(0, 2), 16);
+  const g = 255 - Number.parseInt(hex.slice(2, 4), 16);
+  const b = 255 - Number.parseInt(hex.slice(4, 6), 16);
+
+  const toHex = (value: number) =>
+    value.toString(16).padStart(2, "0").toUpperCase();
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
 export default function MarkerOverlay({
@@ -21,6 +46,8 @@ export default function MarkerOverlay({
   customIcons,
   mapRef,
   isMarkerEditMode = false,
+  activeMarkerId = null,
+  onActiveMarkerChange,
   onMarkerPositionChange,
   onMarkerSizeChange,
 }: MarkerOverlayProps) {
@@ -35,7 +62,17 @@ export default function MarkerOverlay({
     startDistance: number;
     startSize: number;
   } | null>(null);
-  const getTouchDistance = (touches: TouchList): number => {
+
+  useEffect(() => {
+    setSelectedMarkerId(activeMarkerId);
+  }, [activeMarkerId]);
+
+  type TouchPointLike = { clientX: number; clientY: number };
+  type TouchListLike = { length: number; [index: number]: TouchPointLike };
+  const isMobileTouchInput = (): boolean =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+  const getTouchDistance = (touches: TouchListLike): number => {
     if (touches.length < 2) return 0;
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
@@ -105,12 +142,24 @@ export default function MarkerOverlay({
 
       event.preventDefault();
       event.stopPropagation();
-      setSelectedMarkerId(markerId);
 
       if (event.pointerType === "touch") {
+        if (isMobileTouchInput()) {
+          setSelectedMarkerId(markerId);
+          onActiveMarkerChange?.(markerId);
+          setIsTouchSelectionActive(false);
+          setDraggingMarkerId(markerId);
+          updateMarkerByClientPoint(markerId, event.clientX, event.clientY);
+          return;
+        }
+        setSelectedMarkerId(markerId);
+        onActiveMarkerChange?.(markerId);
         setIsTouchSelectionActive(true);
         return;
       }
+
+      setSelectedMarkerId(markerId);
+      onActiveMarkerChange?.(markerId);
       setIsTouchSelectionActive(false);
 
       setDraggingMarkerId(markerId);
@@ -118,16 +167,22 @@ export default function MarkerOverlay({
     },
     [
       isMarkerEditMode,
+      onActiveMarkerChange,
       onMarkerPositionChange,
       updateMarkerByClientPoint,
     ],
   );
 
   const handleMarkerTouchStart = useCallback(
-    (event: React.TouchEvent<HTMLDivElement>, markerId: string, markerSize: number) => {
+    (
+      event: React.TouchEvent<HTMLDivElement>,
+      markerId: string,
+      markerSize: number,
+    ) => {
       if (
         !isMarkerEditMode ||
         !onMarkerSizeChange ||
+        isMobileTouchInput() ||
         event.touches.length < 2 ||
         !isTouchSelectionActive ||
         selectedMarkerId !== markerId
@@ -142,11 +197,16 @@ export default function MarkerOverlay({
         startSize: markerSize,
       });
     },
-    [isMarkerEditMode, isTouchSelectionActive, onMarkerSizeChange, selectedMarkerId],
+    [
+      isMarkerEditMode,
+      isTouchSelectionActive,
+      onMarkerSizeChange,
+      selectedMarkerId,
+    ],
   );
 
   useEffect(() => {
-    if (!touchResizeState || !onMarkerSizeChange) {
+    if (!touchResizeState || !onMarkerSizeChange || isMobileTouchInput()) {
       return;
     }
 
@@ -160,7 +220,8 @@ export default function MarkerOverlay({
       }
       const nextDistance = getTouchDistance(event.touches as TouchList);
       const nextSize = clamp(
-        touchResizeState.startSize * (nextDistance / touchResizeState.startDistance),
+        touchResizeState.startSize *
+          (nextDistance / touchResizeState.startDistance),
         MIN_MARKER_SIZE,
         MAX_MARKER_SIZE,
       );
@@ -184,22 +245,37 @@ export default function MarkerOverlay({
     };
   }, [onMarkerSizeChange, touchResizeState]);
 
-  const handleMarkerTouchEnd = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
-    if (event.touches.length === 0) {
-      setTouchResizeState(null);
-      setIsTouchSelectionActive(false);
-    }
-  }, []);
+  const handleMarkerTouchEnd = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      if (event.touches.length === 0) {
+        setTouchResizeState(null);
+        setIsTouchSelectionActive(false);
+      }
+    },
+    [],
+  );
 
   const handleMarkerWheel = useCallback(
-    (event: React.WheelEvent<HTMLDivElement>, markerId: string, markerSize: number) => {
-      if (!isMarkerEditMode || !onMarkerSizeChange || selectedMarkerId !== markerId) {
+    (
+      event: React.WheelEvent<HTMLDivElement>,
+      markerId: string,
+      markerSize: number,
+    ) => {
+      if (
+        !isMarkerEditMode ||
+        !onMarkerSizeChange ||
+        selectedMarkerId !== markerId
+      ) {
         return;
       }
       event.preventDefault();
       event.stopPropagation();
       const direction = event.deltaY > 0 ? -1 : 1;
-      const nextSize = clamp(markerSize + direction, MIN_MARKER_SIZE, MAX_MARKER_SIZE);
+      const nextSize = clamp(
+        markerSize + direction,
+        MIN_MARKER_SIZE,
+        MAX_MARKER_SIZE,
+      );
       onMarkerSizeChange(markerId, nextSize);
     },
     [isMarkerEditMode, onMarkerSizeChange, selectedMarkerId],
@@ -216,7 +292,11 @@ export default function MarkerOverlay({
       }
       event.preventDefault();
       const direction = event.deltaY > 0 ? -1 : 1;
-      const nextSize = clamp(marker.size + direction, MIN_MARKER_SIZE, MAX_MARKER_SIZE);
+      const nextSize = clamp(
+        marker.size + direction,
+        MIN_MARKER_SIZE,
+        MAX_MARKER_SIZE,
+      );
       onMarkerSizeChange(marker.id, nextSize);
     },
     [isMarkerEditMode, markers, onMarkerSizeChange, selectedMarkerId],
@@ -229,7 +309,11 @@ export default function MarkerOverlay({
 
     const handlePointerMove = (event: PointerEvent) => {
       if (draggingMarkerId && onMarkerPositionChange) {
-        updateMarkerByClientPoint(draggingMarkerId, event.clientX, event.clientY);
+        updateMarkerByClientPoint(
+          draggingMarkerId,
+          event.clientX,
+          event.clientY,
+        );
       }
     };
 
@@ -255,15 +339,45 @@ export default function MarkerOverlay({
   ]);
 
   useEffect(() => {
+    if (!draggingMarkerId || !isMarkerEditMode || !isMobileTouchInput()) {
+      return;
+    }
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 1) {
+        return;
+      }
+      event.preventDefault();
+      const touch = event.touches[0];
+      updateMarkerByClientPoint(draggingMarkerId, touch.clientX, touch.clientY);
+    };
+
+    const stopDrag = () => {
+      setDraggingMarkerId(null);
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", stopDrag);
+    window.addEventListener("touchcancel", stopDrag);
+
+    return () => {
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", stopDrag);
+      window.removeEventListener("touchcancel", stopDrag);
+    };
+  }, [draggingMarkerId, isMarkerEditMode, updateMarkerByClientPoint]);
+
+  useEffect(() => {
     if (!isMarkerEditMode && draggingMarkerId) {
       setDraggingMarkerId(null);
     }
     if (!isMarkerEditMode) {
       setSelectedMarkerId(null);
+      onActiveMarkerChange?.(null);
       setTouchResizeState(null);
       setIsTouchSelectionActive(false);
     }
-  }, [isMarkerEditMode, draggingMarkerId]);
+  }, [isMarkerEditMode, draggingMarkerId, onActiveMarkerChange]);
 
   useEffect(() => {
     if (!isMarkerEditMode || !isTouchSelectionActive || !selectedMarkerId) {
@@ -271,10 +385,8 @@ export default function MarkerOverlay({
     }
 
     const { overflow, touchAction } = document.body.style;
-    const {
-      overflow: htmlOverflow,
-      touchAction: htmlTouchAction,
-    } = document.documentElement.style;
+    const { overflow: htmlOverflow, touchAction: htmlTouchAction } =
+      document.documentElement.style;
     document.body.style.overflow = "hidden";
     document.body.style.touchAction = "none";
     document.documentElement.style.overflow = "hidden";
@@ -309,7 +421,11 @@ export default function MarkerOverlay({
       ).matches;
       const step = isDesktopInput ? KEYBOARD_RESIZE_STEP : 1;
       const delta = isPlus ? step : -step;
-      const nextSize = clamp(marker.size + delta, MIN_MARKER_SIZE, MAX_MARKER_SIZE);
+      const nextSize = clamp(
+        marker.size + delta,
+        MIN_MARKER_SIZE,
+        MAX_MARKER_SIZE,
+      );
       onMarkerSizeChange(marker.id, nextSize);
     };
 
@@ -361,10 +477,14 @@ export default function MarkerOverlay({
           }${selectedMarkerId === marker.id ? " is-selected" : ""}${
             touchResizeState?.markerId === marker.id ? " is-resizing" : ""
           }`}
-          style={{ left: `${x}px`, top: `${y}px` }}
-          onPointerDown={(event) =>
-            handleMarkerPointerDown(event, marker.id)
+          style={
+            {
+              left: `${x}px`,
+              top: `${y}px`,
+              "--marker-highlight-color": getOppositeHighlightColor(marker.color),
+            } as CSSProperties
           }
+          onPointerDown={(event) => handleMarkerPointerDown(event, marker.id)}
           onWheel={(event) => handleMarkerWheel(event, marker.id, marker.size)}
           onTouchStart={(event) =>
             handleMarkerTouchStart(event, marker.id, marker.size)

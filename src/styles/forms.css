@@ -1509,6 +1509,7 @@ label.color-field-label {
 .markers-section-head-actions {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -1569,6 +1570,110 @@ button.marker-info-btn:focus-visible {
 .markers-section__list {
   display: grid;
   gap: 10px;
+}
+
+.markers-section__mobile-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 7px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding-top: 10px;
+  padding-right: 16px;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.markers-section__mobile-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.markers-section__marker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.marker-mobile-card {
+  position: relative;
+  flex: 0 0 clamp(90px, 30%, 116px);
+  min-width: clamp(90px, 30%, 116px);
+  scroll-snap-align: start;
+  border: 1px solid rgba(151, 183, 207, 0.26);
+  border-radius: 10px;
+  background: rgba(10, 20, 31, 0.78);
+}
+
+.marker-mobile-card.is-selected {
+  border-color: rgba(112, 184, 222, 0.82);
+  box-shadow: 0 0 0 2px rgba(75, 149, 186, 0.2);
+}
+
+button.marker-mobile-card__select {
+  width: 100%;
+  min-height: 72px;
+  margin: 0;
+  padding: 8px 6px 7px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #d8e8f4;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 7px;
+}
+
+button.marker-mobile-card__select:not(:disabled):hover,
+button.marker-mobile-card__select:focus-visible {
+  transform: none;
+  filter: none;
+  background: rgba(20, 39, 54, 0.94);
+}
+
+.marker-mobile-card__label {
+  width: 100%;
+  font-size: 0.64rem;
+  line-height: 1.25;
+  font-weight: 700;
+  text-align: center;
+  color: #d9e8f4;
+  white-space: normal;
+  word-break: break-word;
+}
+
+button.marker-mobile-card__delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(35%, -35%);
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 152, 129, 0.34);
+  background: rgba(82, 44, 36, 0.86);
+  color: #ffd5cb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.marker-mobile-card__delete svg {
+  width: 15px;
+  height: 15px;
+}
+
+button.marker-mobile-card__delete:not(:disabled):hover,
+button.marker-mobile-card__delete:focus-visible {
+  transform: translate(35%, -35%);
+  filter: none;
+  border-color: rgba(255, 152, 129, 0.72);
+  background: rgba(97, 53, 44, 0.94);
 }
 
 .markers-section__actions {
@@ -1746,7 +1851,17 @@ button.marker-settings-card__reset-btn {
   color: #d9e7f2;
 }
 
-.marker-settings-toggle-btn.is-active {
+.marker-header-action-btn {
+  min-width: 128px;
+}
+
+.marker-header-settings-btn.is-compact {
+  min-width: 40px;
+  width: 40px;
+  padding: 0;
+}
+
+.marker-header-action-btn.is-active {
   border-color: rgba(112, 184, 222, 0.82);
   background: rgba(42, 72, 93, 0.95);
 }
@@ -2572,6 +2687,10 @@ button.location-clear-btn:focus-visible {
 
   .marker-picker__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .markers-section__marker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .marker-row__actions {
